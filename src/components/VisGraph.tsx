@@ -16,7 +16,8 @@ interface EdgeData {
 const defaultOptions = { height: "100%", width: "100%", physics: false };
 
 function VisNetwork() {
-  const networkRef = useRef<HTMLDivElement>(null);
+  const networkRef = useRef<Network | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const nodes = useRef<DataSet<NodeData>>(new DataSet());
   const edges = useRef<DataSet<EdgeData>>(new DataSet());
   const [loading, setLoading] = useState(true); // Added loading state
@@ -30,12 +31,11 @@ function VisNetwork() {
 
       edges.current = new DataSet(data.edges);
 
-      const container = networkRef.current;
       const networkData = { nodes: nodes.current, edges: edges.current };
 
-      if (container) {
-        const network = new Network(
-          container as HTMLElement,
+      if (containerRef.current && !networkRef.current) {
+        networkRef.current = new Network(
+          containerRef.current as HTMLElement,
           networkData,
           defaultOptions
         );
@@ -59,7 +59,7 @@ function VisNetwork() {
 
   return (
     <>
-      <div ref={networkRef} style={{ height: "400px" }} />
+      <div ref={containerRef} className="graph-container" />
       <button onClick={addNode} type="button" className="add-node-button">
         Add Node
       </button>
