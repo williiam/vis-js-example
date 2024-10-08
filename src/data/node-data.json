@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Node 1",
+      "title": "Node 1",
+      "group": "nodes"
+    },
+    {
+      "id": 2,
+      "label": "Node 2",
+      "title": "Node 2",
+      "group": "nodes"
+    },
+    {
+      "id": 3,
+      "label": "Node 3",
+      "title": "Node 3",
+      "group": "nodes"
+    }
+  ]
+}
