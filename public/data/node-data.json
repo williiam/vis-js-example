@@ -18,5 +18,11 @@
       "title": "Node 3",
       "group": "nodes"
     }
+  ],
+  "edges": [
+    {
+      "from": 1,
+      "to": 2
+    }
   ]
 }

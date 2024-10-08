@@ -5,3 +5,16 @@
   border-radius: 10px;
   margin: 0 auto;
 }
+
+.add-node-button {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
