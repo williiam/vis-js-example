@@ -1,19 +1,36 @@
 import { useEffect, useRef, useState } from "react";
 import { DataSet, Network } from "vis-network/standalone";
+import hub from "../assets/hub.png";
 
 interface NodeData {
-  id: number; // Changed type from string to number
+  id: string;
   label: string;
   group: string;
+  srcip: string;
+  dstip: string;
+  poluuid: string;
 }
 
 interface EdgeData {
   id: string;
-  from: number; // Changed type from string to number
-  to: number; // Changed type from string to number
+  from: string;
+  to: string;
 }
 
-const defaultOptions = { height: "100%", width: "100%", physics: false };
+const defaultOptions = {
+  height: "100%",
+  width: "100%",
+  physics: false,
+  nodes: {
+    shape: "image",
+    image: hub,
+    size: 10,
+  },
+  layout: {
+    randomSeed: 1,
+    improvedLayout: true,
+  },
+};
 
 function VisNetwork() {
   const networkRef = useRef<Network | null>(null);
@@ -24,10 +41,18 @@ function VisNetwork() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch("data/node-data.json"); // Fetching node data
+      const response = await fetch("data/network-log.json"); // Fetching node data
       const data = await response.json();
 
-      nodes.current = new DataSet(data.nodes); // Using fetched data
+      nodes.current = new DataSet(
+        data.map((entry: { result: NodeData }, index: number) => ({
+          id: `${entry.result.poluuid}-${index}`,
+          label: entry.result.srcip,
+          srcip: entry.result.srcip,
+          dstip: entry.result.dstip,
+          group: "nodes",
+        }))
+      ); // Using fetched data
 
       edges.current = new DataSet(data.edges);
 
@@ -46,23 +71,23 @@ function VisNetwork() {
     fetchData(); // Call the fetch function
   }, []);
 
-  const addNode = () => {
-    if (!nodes.current) return;
-    nodes.current.add({
-      id: nodes.current.length + 1,
-      label: `Node ${nodes.current.length + 1}`,
-      group: "nodes",
-    });
-  };
+  // const addNode = () => {
+  // if (!nodes.current) return;
+  // nodes.current.add({
+  // id: (nodes.current.length + 1).toString(),
+  // label: `Node ${nodes.current.length + 1}`,
+  // group: "nodes",
+  // });
+  // };
 
   if (loading) return <div>Loading...</div>; // Show loading state
 
   return (
     <>
       <div ref={containerRef} className="graph-container" />
-      <button onClick={addNode} type="button" className="add-node-button">
-        Add Node
-      </button>
+      {/* <button onClick={addNode} type="button" className="add-node-button"> */}
+      {/* Add Node */}
+      {/* </button> */}
     </>
   );
 }
