@@ -11,6 +11,10 @@ interface NodeData {
   poluuid: string;
 }
 
+interface NewtWorkLog {
+  result: NodeData;
+}
+
 interface EdgeData {
   id: string;
   from: string;
@@ -55,7 +59,7 @@ function VisNetwork() {
       const data = await response.json();
 
       nodes.current = new DataSet(
-        data.map((entry: { result: NodeData }, index: number) => ({
+        data.map((entry: NewtWorkLog, index: number) => ({
           id: `${entry.result.poluuid}-${index}`,
           label: entry.result.srcip,
           srcip: entry.result.srcip,
