@@ -20,7 +20,17 @@ interface EdgeData {
 const defaultOptions = {
   height: "100%",
   width: "100%",
-  physics: false,
+  physics: {
+    enabled: true,
+    barnesHut: {
+      gravitationalConstant: -2000,
+      centralGravity: 0.3,
+      springLength: 95,
+      springConstant: 0.04,
+      damping: 0.09,
+      avoidOverlap: 0.1,
+    },
+  },
   nodes: {
     shape: "image",
     image: hub,
