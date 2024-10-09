@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { DataSet, Network } from "vis-network/standalone";
 import hub from "../assets/hub.png";
 
+interface EdgeMap {
+  [key: string]: {
+    count: number;
+    services: Set<string>;
+    protocols: Set<string>;
+  };
+}
+
 interface NodeData {
   id: string;
   label: string;
@@ -60,14 +68,41 @@ const defaultOptions = {
   },
 };
 
-function createIPEdge(srcip: string, dstip: string, entry: NewtWorkLog) {
-  return {
-    id: `${srcip}-${dstip}-${entry.result.sessionid}`,
-    from: srcip,
-    to: dstip,
-    title: `${entry.result.service} (${entry.result.proto})`,
-    value: 1, // You can increment this for repeated connections
-  };
+function createEdges(data: NewtWorkLog[]) {
+  const edgeMap: EdgeMap = {};
+
+  for (const entry of data) {
+    const key = `${entry.result.srcip}-${entry.result.dstip}`;
+    if (!edgeMap[key]) {
+      edgeMap[key] = { count: 0, services: new Set(), protocols: new Set() };
+    }
+    edgeMap[key].count++;
+    edgeMap[key].services.add(entry.result.service);
+    edgeMap[key].protocols.add(entry.result.proto);
+  }
+
+  return Object.entries(edgeMap).map(([key, value]) => {
+    const [from, to] = key.split("-");
+    return {
+      id: key,
+      from,
+      to,
+      value: value.count, // This will affect edge thickness
+      title: `Connections: ${value.count}`,
+      color: getEdgeColor(Array.from(value.services)[0]), // Color based on the first service
+    };
+  });
+}
+
+function getEdgeColor(service: string) {
+  switch (service) {
+    case "DNS":
+      return "#FFA500"; // Orange for DNS
+    case "HTTPS":
+      return "#4CAF50"; // Green for HTTPS
+    default:
+      return "#2196F3"; // Blue for other services
+  }
 }
 
 function VisNetwork() {
@@ -106,13 +141,7 @@ function VisNetwork() {
 
       nodes.current = new DataSet(nodeData);
 
-      edges.current = new DataSet(
-        data.map((entry: NewtWorkLog) =>
-          createIPEdge(entry.result.srcip, entry.result.dstip, entry)
-        )
-      );
-
-      console.log({ edges: edges.current });
+      edges.current = new DataSet(createEdges(data));
 
       const networkData = { nodes: nodes.current, edges: edges.current };
 
