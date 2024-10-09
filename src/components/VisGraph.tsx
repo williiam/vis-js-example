@@ -9,6 +9,9 @@ interface NodeData {
   srcip: string;
   dstip: string;
   poluuid: string;
+  sessionid: string;
+  service: string;
+  proto: string;
 }
 
 interface NewtWorkLog {
@@ -40,11 +43,39 @@ const defaultOptions = {
     image: hub,
     size: 45,
   },
+  edges: {
+    color: {
+      color: "#d6d6d6",
+    },
+    arrows: {
+      to: {
+        enabled: true,
+        scaleFactor: 0.5,
+      },
+    },
+  },
   layout: {
     randomSeed: 1,
     improvedLayout: true,
   },
 };
+
+function createIPEdge(srcip: string, dstip: string, entry: NewtWorkLog) {
+  return {
+    id: `${srcip}-${dstip}-${entry.result.sessionid}`,
+    from: srcip,
+    to: dstip,
+    title: `${entry.result.service} (${entry.result.proto})`,
+    value: 1, // You can increment this for repeated connections
+  };
+}
+
+function getNodeColor(ip: string) {
+  if (ip.startsWith("192.168.")) {
+    return "#97c2fc"; // Light blue for internal IPs
+  }
+  return "#fb7e81"; // Light red for external IPs
+}
 
 function VisNetwork() {
   const networkRef = useRef<Network | null>(null);
@@ -58,17 +89,39 @@ function VisNetwork() {
       const response = await fetch("data/network-log.json"); // Fetching node data
       const data = await response.json();
 
-      nodes.current = new DataSet(
-        data.map((entry: NewtWorkLog, index: number) => ({
-          id: `${entry.result.poluuid}-${index}`,
-          label: entry.result.srcip,
-          srcip: entry.result.srcip,
-          dstip: entry.result.dstip,
-          group: "nodes",
-        }))
-      ); // Using fetched data
+      const uniqueIPs = new Set<string>();
+      const nodeData = data.flatMap((entry: NewtWorkLog) => {
+        const nodes = [];
+        if (!uniqueIPs.has(entry.result.srcip)) {
+          uniqueIPs.add(entry.result.srcip);
+          nodes.push({
+            id: entry.result.srcip,
+            label: entry.result.srcip,
+            group: "nodes",
+            color: getNodeColor(entry.result.srcip),
+          });
+        }
+        if (!uniqueIPs.has(entry.result.dstip)) {
+          uniqueIPs.add(entry.result.dstip);
+          nodes.push({
+            id: entry.result.dstip,
+            label: entry.result.dstip,
+            group: "nodes",
+            color: getNodeColor(entry.result.dstip),
+          });
+        }
+        return nodes;
+      });
 
-      edges.current = new DataSet(data.edges);
+      nodes.current = new DataSet(nodeData);
+
+      edges.current = new DataSet(
+        data.map((entry: NewtWorkLog) =>
+          createIPEdge(entry.result.srcip, entry.result.dstip, entry)
+        )
+      );
+
+      console.log({ edges: edges.current });
 
       const networkData = { nodes: nodes.current, edges: edges.current };
 
