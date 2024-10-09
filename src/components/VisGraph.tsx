@@ -34,7 +34,7 @@ const defaultOptions = {
   nodes: {
     shape: "image",
     image: hub,
-    size: 10,
+    size: 45,
   },
   layout: {
     randomSeed: 1,
