@@ -70,13 +70,6 @@ function createIPEdge(srcip: string, dstip: string, entry: NewtWorkLog) {
   };
 }
 
-function getNodeColor(ip: string) {
-  if (ip.startsWith("192.168.")) {
-    return "#97c2fc"; // Light blue for internal IPs
-  }
-  return "#fb7e81"; // Light red for external IPs
-}
-
 function VisNetwork() {
   const networkRef = useRef<Network | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -98,7 +91,6 @@ function VisNetwork() {
             id: entry.result.srcip,
             label: entry.result.srcip,
             group: "nodes",
-            color: getNodeColor(entry.result.srcip),
           });
         }
         if (!uniqueIPs.has(entry.result.dstip)) {
@@ -107,7 +99,6 @@ function VisNetwork() {
             id: entry.result.dstip,
             label: entry.result.dstip,
             group: "nodes",
-            color: getNodeColor(entry.result.dstip),
           });
         }
         return nodes;
