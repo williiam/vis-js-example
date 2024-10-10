@@ -27,19 +27,31 @@ function VisNetwork() {
       const response = await fetch("data/node-data.json"); // Fetching node data
       const data = await response.json();
 
+      console.log("fetched");
+
       nodes.current = new DataSet(data.nodes); // Using fetched data
 
       edges.current = new DataSet(data.edges);
 
+      console.log("nodes.current", nodes.current);
+      console.log("edges.current", edges.current);
       const networkData = { nodes: nodes.current, edges: edges.current };
 
-      if (containerRef.current && !networkRef.current) {
-        networkRef.current = new Network(
-          containerRef.current as HTMLElement,
-          networkData,
-          defaultOptions
-        );
+      function initNetwork() {
+        if (!networkRef.current) {
+          networkRef.current = new Network(
+            containerRef.current as HTMLElement,
+            networkData,
+            defaultOptions
+          );
+        }
+
+        console.log("containerRef.current", containerRef.current);
+        console.log("networkRef.current", networkRef.current);
       }
+
+      requestAnimationFrame(initNetwork);
+
       setLoading(false); // Set loading to false after data is fetched
     };
 
