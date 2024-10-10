@@ -21,6 +21,7 @@ function VisNetwork() {
   const nodes = useRef<DataSet<NodeData>>(new DataSet());
   const edges = useRef<DataSet<EdgeData>>(new DataSet());
   const [loading, setLoading] = useState(true); // Added loading state
+  const cleanupRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,12 +51,18 @@ function VisNetwork() {
         console.log("networkRef.current", networkRef.current);
       }
 
-      requestAnimationFrame(initNetwork);
+      const frameID = requestAnimationFrame(initNetwork);
 
       setLoading(false); // Set loading to false after data is fetched
+
+      return () => cancelAnimationFrame(frameID);
     };
 
-    fetchData(); // Call the fetch function
+    fetchData().then((c) => {
+      cleanupRef.current = c;
+    }); // Call the fetch function
+
+    return cleanupRef.current;
   }, []);
 
   const addNode = () => {
