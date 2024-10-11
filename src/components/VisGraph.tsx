@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { DataSet, Network } from "vis-network/standalone";
+import { DataSet } from "vis-data/peer/esm/vis-data";
+import { Network } from "vis-network/peer/esm/vis-network";
 import hub from "../assets/hub.png";
 
 interface EdgeMap {
@@ -155,7 +156,6 @@ function VisNetwork() {
           );
         }
       }
-
 
       animationFrame.current = requestAnimationFrame(initNetwork);
       setLoading(false); // Set loading to false after data is fetched
