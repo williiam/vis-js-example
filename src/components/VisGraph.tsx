@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { DataSet, Network } from "vis-network/standalone";
+import { Network } from "vis-network/peer/esm/vis-network";
+import { DataSet } from "vis-data/peer/esm/vis-data";
 
 interface NodeData {
   id: number; // Changed type from string to number
