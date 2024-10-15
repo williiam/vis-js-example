@@ -94,7 +94,7 @@ function createEdges(data: NewtWorkLog[]) {
       id: key,
       from,
       to,
-      value: value.count, // This will affect edge thickness
+      value: (value.count * 500) / 100, // This will affect edge thickness
       title: `Connections: ${value.count}`,
       color: getEdgeColor(Array.from(value.services)[0]), // Color based on the first service
     };
