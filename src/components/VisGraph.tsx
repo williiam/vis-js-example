@@ -7,7 +7,6 @@ import ConnectionHistoryTable from "./ConnectionHistoryTable";
 import type {
   EdgeData,
   NodeData,
-  NewtWorkLog,
   NetworkEventParams,
 } from "../types/vis-network";
 import type { ConnectionHistory } from "../types/ip-connection";
@@ -69,7 +68,7 @@ function VisNetwork() {
 
   useEffect(() => {
     const worker = new Worker(
-      new URL("../workers/createEdges.ts", import.meta.url)
+      new URL("../workers/createGraph.ts", import.meta.url)
     );
 
     const handleNodeClick = (params: NetworkEventParams<MouseEvent>) => {
@@ -85,34 +84,12 @@ function VisNetwork() {
       const response = await fetch("data/network-log.json"); // Fetching node data
       const data = await response.json();
 
-      const uniqueIPs = new Set<string>();
-      const nodeData = data.flatMap((entry: NewtWorkLog) => {
-        const nodes = [];
-        if (!uniqueIPs.has(entry.result.srcip)) {
-          uniqueIPs.add(entry.result.srcip);
-          nodes.push({
-            id: entry.result.srcip,
-            label: entry.result.srcip,
-            group: "nodes",
-          });
-        }
-        if (!uniqueIPs.has(entry.result.dstip)) {
-          uniqueIPs.add(entry.result.dstip);
-          nodes.push({
-            id: entry.result.dstip,
-            label: entry.result.dstip,
-            group: "nodes",
-          });
-        }
-        return nodes;
-      });
-
-      nodes.current = new DataSet(nodeData);
-
       worker.postMessage(data);
       worker.onmessage = (e) => {
-        console.log("edges created by web worker");
-        edges.current = new DataSet(e.data);
+        console.log("graph created by web worker");
+        const { nodes: nodeData, edges: edgeData } = e.data;
+        nodes.current = new DataSet(nodeData);
+        edges.current = new DataSet(edgeData);
         const networkData = { nodes: nodes.current, edges: edges.current };
         animationFrame.current = requestAnimationFrame(() =>
           initNetwork(networkData)
