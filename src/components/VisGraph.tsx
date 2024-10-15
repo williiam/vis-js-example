@@ -94,6 +94,8 @@ function VisNetwork() {
         animationFrame.current = requestAnimationFrame(() =>
           initNetwork(networkData)
         );
+        const connectionHistory = parseConnectionHistory(data, edges.current);
+        setConnectionHistory(connectionHistory);
       };
 
       function initNetwork(networkData: Data) {
@@ -110,53 +112,64 @@ function VisNetwork() {
       // animationFrame.current = requestAnimationFrame(initNetwork);
       setLoading(false); // Set loading to false after data is fetched
 
-      // Parse connection connectionHistory
-      const connectionHistory: ConnectionHistory = {};
-      for (const entry of data) {
-        const { srcip, dstip, date, time, service, proto, srcport, dstport } =
-          entry.result;
-        if (!connectionHistory[srcip]) connectionHistory[srcip] = [];
-        if (!connectionHistory[dstip]) connectionHistory[dstip] = [];
+      function parseConnectionHistory(
+        data: ({ result: NodeData } & {
+          result: {
+            srcip: string;
+            dstip: string;
+            date: string;
+            time: string;
+            service: string;
+            proto: string;
+            srcport: string;
+            dstport: string;
+          };
+        })[],
+        edges: DataSet<EdgeData>
+      ) {
+        const connectionHistory: ConnectionHistory = {};
+        for (const entry of data) {
+          const { srcip, dstip, date, time, service, proto, srcport, dstport } =
+            entry.result;
+          if (!connectionHistory[srcip]) connectionHistory[srcip] = [];
+          if (!connectionHistory[dstip]) connectionHistory[dstip] = [];
 
-        //get traffic from edge dataset, the count value is the traffic
-        let traffic = 0;
-        const filteredEdges = edges.current.get({
-          filter: (edge) => edge.from === srcip && edge.to === dstip,
-        });
-        if (filteredEdges?.length) {
-          traffic = filteredEdges[0].value;
+          let traffic = 0;
+          const filteredEdges = edges.get({
+            filter: (edge) => edge.from === srcip && edge.to === dstip,
+          });
+          if (filteredEdges?.length) {
+            traffic = filteredEdges[0].value;
+          }
+
+          const commonData = {
+            time: `${date} ${time}`,
+            service,
+            protocol: proto,
+            srcPort: srcport,
+            dstPort: dstport,
+            traffic,
+          };
+          connectionHistory[srcip].push({
+            ...commonData,
+            direction: "outgoing",
+            otherIP: dstip,
+          });
+          connectionHistory[dstip].push({
+            ...commonData,
+            direction: "incoming",
+            otherIP: srcip,
+          });
+
+          for (const ip of Object.keys(connectionHistory)) {
+            connectionHistory[ip].sort(
+              (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+            );
+          }
         }
 
-        const commonData = {
-          time: `${date} ${time}`,
-          service,
-          protocol: proto,
-          srcPort: srcport,
-          dstPort: dstport,
-          traffic,
-        };
-
-        connectionHistory[srcip].push({
-          ...commonData,
-          direction: "outgoing",
-          otherIP: dstip,
-        });
-
-        connectionHistory[dstip].push({
-          ...commonData,
-          direction: "incoming",
-          otherIP: srcip,
-        });
+        return connectionHistory;
       }
-
-      // Sort each node's connectionHistory by time
-      for (const ip of Object.keys(connectionHistory)) {
-        connectionHistory[ip].sort(
-          (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
-        );
-      }
-
-      setConnectionHistory(connectionHistory);
     };
 
     fetchData();
