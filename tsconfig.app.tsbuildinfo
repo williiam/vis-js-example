@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/visgraph.tsx"],"version":"5.6.2"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/connectionhistorytable.tsx","./src/components/visgraph.tsx","./src/types/ip-connection.ts","./src/types/vis-network.ts","./src/workers/createedges.ts"],"version":"5.6.2"}

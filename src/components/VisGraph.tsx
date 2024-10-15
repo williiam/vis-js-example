@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { DataSet } from "vis-data/peer/esm/vis-data";
-import { Network } from "vis-network/peer/esm/vis-network";
+import { type Data, Network } from "vis-network/peer/esm/vis-network";
 import hub from "../assets/hub.png";
 import ConnectionHistoryTable from "./ConnectionHistoryTable";
 
@@ -8,7 +8,6 @@ import type {
   EdgeData,
   NodeData,
   NewtWorkLog,
-  EdgeMap,
   NetworkEventParams,
 } from "../types/vis-network";
 import type { ConnectionHistory } from "../types/ip-connection";
@@ -55,43 +54,6 @@ const defaultOptions = {
   },
 };
 
-function createEdges(data: NewtWorkLog[]) {
-  const edgeMap: EdgeMap = {};
-
-  for (const entry of data) {
-    const key = `${entry.result.srcip}-${entry.result.dstip}`;
-    if (!edgeMap[key]) {
-      edgeMap[key] = { count: 0, services: new Set(), protocols: new Set() };
-    }
-    edgeMap[key].count++;
-    edgeMap[key].services.add(entry.result.service);
-    edgeMap[key].protocols.add(entry.result.proto);
-  }
-
-  return Object.entries(edgeMap).map(([key, value]) => {
-    const [from, to] = key.split("-");
-    return {
-      id: key,
-      from,
-      to,
-      value: value.count, // This will affect edge thickness
-      title: `Connections: ${value.count}`,
-      color: getEdgeColor(Array.from(value.services)[0]), // Color based on the first service
-    };
-  });
-}
-
-function getEdgeColor(service: string) {
-  switch (service) {
-    case "DNS":
-      return "#FFA500"; // Orange for DNS
-    case "HTTPS":
-      return "#4CAF50"; // Green for HTTPS
-    default:
-      return "#2196F3"; // Blue for other services
-  }
-}
-
 function VisNetwork() {
   const networkRef = useRef<Network | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -106,6 +68,10 @@ function VisNetwork() {
   const [isTableOpen, setIsTableOpen] = useState(false);
 
   useEffect(() => {
+    const worker = new Worker(
+      new URL("../workers/createEdges.ts", import.meta.url)
+    );
+
     const handleNodeClick = (params: NetworkEventParams<MouseEvent>) => {
       const clickedNode = params.nodes[0];
       if (clickedNode) {
@@ -143,11 +109,17 @@ function VisNetwork() {
 
       nodes.current = new DataSet(nodeData);
 
-      edges.current = new DataSet(createEdges(data));
+      worker.postMessage(data);
+      worker.onmessage = (e) => {
+        console.log("edges created by web worker");
+        edges.current = new DataSet(e.data);
+        const networkData = { nodes: nodes.current, edges: edges.current };
+        animationFrame.current = requestAnimationFrame(() =>
+          initNetwork(networkData)
+        );
+      };
 
-      const networkData = { nodes: nodes.current, edges: edges.current };
-
-      function initNetwork() {
+      function initNetwork(networkData: Data) {
         if (!networkRef.current) {
           networkRef.current = new Network(
             containerRef.current as HTMLElement,
@@ -158,7 +130,7 @@ function VisNetwork() {
         networkRef.current.on("click", handleNodeClick);
       }
 
-      animationFrame.current = requestAnimationFrame(initNetwork);
+      // animationFrame.current = requestAnimationFrame(initNetwork);
       setLoading(false); // Set loading to false after data is fetched
 
       // Parse connection connectionHistory
@@ -213,6 +185,7 @@ function VisNetwork() {
     fetchData();
 
     return () => {
+      worker.terminate();
       if (animationFrame.current) {
         cancelAnimationFrame(animationFrame.current);
       }
