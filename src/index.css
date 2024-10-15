@@ -1,3 +1,7 @@
+body {
+  overflow-x: hidden;
+}
+
 .graph-container {
   max-width: 1366px;
   height: 80vh;
@@ -5,19 +9,20 @@
   border-radius: 10px;
   margin: 40px auto;
   padding: 20px;
+  position: relative;
 }
 
 /* .add-node-button { */
-  /* background-color: #000; */
-  /* color: #fff; */
-  /* border: none; */
-  /* padding: 10px 20px; */
-  /* border-radius: 5px; */
-  /* cursor: pointer; */
-  /* margin-top: 10px; */
-  /* margin-left: 10px; */
-  /* font-size: 16px; */
-  /* font-weight: bold; */
+/* background-color: #000; */
+/* color: #fff; */
+/* border: none; */
+/* padding: 10px 20px; */
+/* border-radius: 5px; */
+/* cursor: pointer; */
+/* margin-top: 10px; */
+/* margin-left: 10px; */
+/* font-size: 16px; */
+/* font-weight: bold; */
 /* } */
 /*  */
 
@@ -30,4 +35,57 @@
   font: 12px sans-serif;
   background: lightsteelblue;
   border: 0px;
+}
+
+.connection-history {
+  margin-top: 20px;
+  position: absolute;
+  top: 20%;
+  right: 0;
+  width: 640px;
+  height: 50%;
+  border: 1px solid #000;
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #fff;
+  color: #000;
+  opacity: 1;
+  transform: translateX(100%);
+  z-index: 50;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  overflow: hidden;
+
+  & table {
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+    display: block;
+
+    & td {
+      text-align: center;
+      padding: 1rem;
+    }
+  }
+
+  &.open {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &.close {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.close-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0.5rem;
+  background-color: transparent;
+  color: #000;
+  border: none;
+  cursor: pointer;
 }

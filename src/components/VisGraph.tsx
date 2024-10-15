@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DataSet } from "vis-data/peer/esm/vis-data";
 import { Network } from "vis-network/peer/esm/vis-network";
 import hub from "../assets/hub.png";
+import ConnectionHistoryTable from "./ConnectionHistoryTable";
 
 interface EdgeMap {
   [key: string]: {
@@ -75,6 +76,22 @@ const defaultOptions = {
   },
 };
 
+interface NetworkEventParams<T> {
+  nodes: Array<NodeData["id"]>;
+  edges: Array<EdgeData["id"]>;
+  event: T;
+  pointer: {
+    DOM: {
+      x: number;
+      y: number;
+    };
+    canvas: {
+      x: number;
+      y: number;
+    };
+  };
+}
+
 function createEdges(data: NewtWorkLog[]) {
   const edgeMap: EdgeMap = {};
 
@@ -112,6 +129,19 @@ function getEdgeColor(service: string) {
   }
 }
 
+interface ConnectionEntry {
+  time: string;
+  direction: "outgoing" | "incoming";
+  otherIP: string;
+  service: string;
+  srcPort: string;
+  dstPort: string;
+}
+
+interface ConnectionHistory {
+  [key: string]: ConnectionEntry[];
+}
+
 function VisNetwork() {
   const networkRef = useRef<Network | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -119,8 +149,22 @@ function VisNetwork() {
   const edges = useRef<DataSet<EdgeData>>(new DataSet());
   const [loading, setLoading] = useState(true); // Added loading state
   const animationFrame = useRef<number | null>(null);
+  const [connectionHistory, setConnectionHistory] = useState<ConnectionHistory>(
+    {}
+  );
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [isTableOpen, setIsTableOpen] = useState(false);
 
   useEffect(() => {
+    const handleNodeClick = (params: NetworkEventParams<MouseEvent>) => {
+      const clickedNode = params.nodes[0];
+      if (clickedNode) {
+        console.log(clickedNode);
+        setSelectedNode((prev) => (prev === clickedNode ? prev : clickedNode));
+        setIsTableOpen(true);
+      }
+    };
+
     const fetchData = async () => {
       const response = await fetch("data/network-log.json"); // Fetching node data
       const data = await response.json();
@@ -161,36 +205,80 @@ function VisNetwork() {
             defaultOptions
           );
         }
+        networkRef.current.on("click", handleNodeClick);
       }
 
       animationFrame.current = requestAnimationFrame(initNetwork);
       setLoading(false); // Set loading to false after data is fetched
+
+      // Parse connection connectionHistory
+      const connectionHistory: ConnectionHistory = {};
+      for (const entry of data) {
+        const { srcip, dstip, date, time, service, proto, srcport, dstport } =
+          entry.result;
+        if (!connectionHistory[srcip]) connectionHistory[srcip] = [];
+        if (!connectionHistory[dstip]) connectionHistory[dstip] = [];
+
+        const commonData = {
+          time: `${date} ${time}`,
+          service,
+          protocol: proto,
+          srcPort: srcport,
+          dstPort: dstport,
+        };
+
+        connectionHistory[srcip].push({
+          ...commonData,
+          direction: "outgoing",
+          otherIP: dstip,
+        });
+
+        connectionHistory[dstip].push({
+          ...commonData,
+          direction: "incoming",
+          otherIP: srcip,
+        });
+      }
+
+      // Sort each node's connectionHistory by time
+      for (const ip of Object.keys(connectionHistory)) {
+        connectionHistory[ip].sort(
+          (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+        );
+      }
+
+      setConnectionHistory(connectionHistory);
     };
 
-    fetchData(); // Call the fetch function
+    fetchData();
 
     return () => {
-      if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
+      if (animationFrame.current) {
+        cancelAnimationFrame(animationFrame.current);
+      }
+      if (networkRef.current) {
+        networkRef.current.off("click", handleNodeClick);
+      }
     };
   }, []);
 
-  // const addNode = () => {
-  // if (!nodes.current) return;
-  // nodes.current.add({
-  // id: (nodes.current.length + 1).toString(),
-  // label: `Node ${nodes.current.length + 1}`,
-  // group: "nodes",
-  // });
-  // };
+  const closeConnectionHistoryTable = () => {
+    setIsTableOpen(false);
+  };
 
   if (loading) return <div>Loading...</div>; // Show loading state
 
   return (
     <>
       <div ref={containerRef} className="graph-container" />
-      {/* <button onClick={addNode} type="button" className="add-node-button"> */}
-      {/* Add Node */}
-      {/* </button> */}
+      {selectedNode ? (
+        <ConnectionHistoryTable
+          history={connectionHistory[selectedNode] ?? []}
+          nodeIP={selectedNode ?? ""}
+          isOpen={isTableOpen}
+          onClose={closeConnectionHistoryTable}
+        />
+      ) : null}
     </>
   );
 }
