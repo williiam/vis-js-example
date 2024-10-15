@@ -32,6 +32,7 @@ interface EdgeData {
   id: string;
   from: string;
   to: string;
+  value: number;
 }
 
 const defaultOptions = {
@@ -111,7 +112,7 @@ function createEdges(data: NewtWorkLog[]) {
       id: key,
       from,
       to,
-      value: (value.count * 500) / 100, // This will affect edge thickness
+      value: value.count, // This will affect edge thickness
       title: `Connections: ${value.count}`,
       color: getEdgeColor(Array.from(value.services)[0]), // Color based on the first service
     };
@@ -136,6 +137,7 @@ interface ConnectionEntry {
   service: string;
   srcPort: string;
   dstPort: string;
+  traffic: number;
 }
 
 interface ConnectionHistory {
@@ -219,12 +221,22 @@ function VisNetwork() {
         if (!connectionHistory[srcip]) connectionHistory[srcip] = [];
         if (!connectionHistory[dstip]) connectionHistory[dstip] = [];
 
+        //get traffic from edge dataset, the count value is the traffic
+        let traffic = 0;
+        const filteredEdges = edges.current.get({
+          filter: (edge) => edge.from === srcip && edge.to === dstip,
+        });
+        if (filteredEdges?.length) {
+          traffic = filteredEdges[0].value;
+        }
+
         const commonData = {
           time: `${date} ${time}`,
           service,
           protocol: proto,
           srcPort: srcport,
           dstPort: dstport,
+          traffic,
         };
 
         connectionHistory[srcip].push({

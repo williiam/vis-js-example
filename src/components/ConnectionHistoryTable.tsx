@@ -5,6 +5,7 @@ interface ConnectionEntry {
   service: string;
   srcPort: string;
   dstPort: string;
+  traffic: number;
 }
 
 interface ConnectionHistoryTableProps {
@@ -32,6 +33,7 @@ const ConnectionHistoryTable: React.FC<ConnectionHistoryTableProps> = ({
             <th>Time</th>
             <th>Direction</th>
             <th>Other IP</th>
+            <th>Traffic</th>
             <th>Service</th>
             <th>Source Port</th>
             <th>Destination Port</th>
@@ -43,6 +45,7 @@ const ConnectionHistoryTable: React.FC<ConnectionHistoryTableProps> = ({
               <td>{entry.time}</td>
               <td>{entry.direction}</td>
               <td>{entry.otherIP}</td>
+              <td>{entry.traffic}</td>
               <td>{entry.service}</td>
               <td>{entry.srcPort}</td>
               <td>{entry.dstPort}</td>
