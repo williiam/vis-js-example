@@ -4,36 +4,14 @@ import { Network } from "vis-network/peer/esm/vis-network";
 import hub from "../assets/hub.png";
 import ConnectionHistoryTable from "./ConnectionHistoryTable";
 
-interface EdgeMap {
-  [key: string]: {
-    count: number;
-    services: Set<string>;
-    protocols: Set<string>;
-  };
-}
-
-interface NodeData {
-  id: string;
-  label: string;
-  group: string;
-  srcip: string;
-  dstip: string;
-  poluuid: string;
-  sessionid: string;
-  service: string;
-  proto: string;
-}
-
-interface NewtWorkLog {
-  result: NodeData;
-}
-
-interface EdgeData {
-  id: string;
-  from: string;
-  to: string;
-  value: number;
-}
+import type {
+  EdgeData,
+  NodeData,
+  NewtWorkLog,
+  EdgeMap,
+  NetworkEventParams,
+} from "../types/vis-network";
+import type { ConnectionHistory } from "../types/ip-connection";
 
 const defaultOptions = {
   height: "100%",
@@ -77,22 +55,6 @@ const defaultOptions = {
   },
 };
 
-interface NetworkEventParams<T> {
-  nodes: Array<NodeData["id"]>;
-  edges: Array<EdgeData["id"]>;
-  event: T;
-  pointer: {
-    DOM: {
-      x: number;
-      y: number;
-    };
-    canvas: {
-      x: number;
-      y: number;
-    };
-  };
-}
-
 function createEdges(data: NewtWorkLog[]) {
   const edgeMap: EdgeMap = {};
 
@@ -128,20 +90,6 @@ function getEdgeColor(service: string) {
     default:
       return "#2196F3"; // Blue for other services
   }
-}
-
-interface ConnectionEntry {
-  time: string;
-  direction: "outgoing" | "incoming";
-  otherIP: string;
-  service: string;
-  srcPort: string;
-  dstPort: string;
-  traffic: number;
-}
-
-interface ConnectionHistory {
-  [key: string]: ConnectionEntry[];
 }
 
 function VisNetwork() {

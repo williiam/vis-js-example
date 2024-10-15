@@ -1,12 +1,4 @@
-interface ConnectionEntry {
-  time: string;
-  direction: "outgoing" | "incoming";
-  otherIP: string;
-  service: string;
-  srcPort: string;
-  dstPort: string;
-  traffic: number;
-}
+import type { ConnectionEntry } from "../types/ip-connection";
 
 interface ConnectionHistoryTableProps {
   history: ConnectionEntry[];
