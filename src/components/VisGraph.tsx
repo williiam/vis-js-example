@@ -39,8 +39,8 @@ const defaultOptions = {
   physics: {
     enabled: true,
     barnesHut: {
-      gravitationalConstant: -2000,
-      centralGravity: 0.3,
+      gravitationalConstant: -12000,
+      centralGravity: 0.2,
       springLength: 95,
       springConstant: 0.04,
       damping: 0.09,
@@ -50,12 +50,18 @@ const defaultOptions = {
   nodes: {
     shape: "image",
     image: hub,
-    size: 45,
+    size: 92,
+    font: {
+      size: 32,
+      color: "#000",
+      face: "arial",
+    },
   },
   edges: {
     color: {
       color: "#d6d6d6",
     },
+    length: 300,
     arrows: {
       to: {
         enabled: true,
