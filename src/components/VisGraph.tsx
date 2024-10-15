@@ -115,12 +115,8 @@ function VisNetwork() {
       function parseConnectionHistory(
         data: ({ result: NodeData } & {
           result: {
-            srcip: string;
-            dstip: string;
             date: string;
             time: string;
-            service: string;
-            proto: string;
             srcport: string;
             dstport: string;
           };
