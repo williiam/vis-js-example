@@ -68,7 +68,8 @@ function VisNetwork() {
 
   useEffect(() => {
     const worker = new Worker(
-      new URL("../workers/createGraph.ts", import.meta.url)
+      new URL("../workers/createGraph.ts", import.meta.url),
+      { type: "module" }
     );
 
     const handleNodeClick = (params: NetworkEventParams<MouseEvent>) => {
@@ -85,17 +86,26 @@ function VisNetwork() {
       const data = await response.json();
 
       worker.postMessage(data);
-      worker.onmessage = (e) => {
+      worker.onmessage = (
+        e: MessageEvent<{
+          nodes: NodeData[];
+          edges: EdgeData[];
+          connectionHistory: ConnectionHistory;
+        }>
+      ) => {
         console.log("graph created by web worker");
-        const { nodes: nodeData, edges: edgeData } = e.data;
+        const {
+          nodes: nodeData,
+          edges: edgeData,
+          connectionHistory: cHistory,
+        } = e.data;
         nodes.current = new DataSet(nodeData);
         edges.current = new DataSet(edgeData);
         const networkData = { nodes: nodes.current, edges: edges.current };
         animationFrame.current = requestAnimationFrame(() =>
           initNetwork(networkData)
         );
-        const connectionHistory = parseConnectionHistory(data, edges.current);
-        setConnectionHistory(connectionHistory);
+        setConnectionHistory(cHistory);
       };
 
       function initNetwork(networkData: Data) {
@@ -109,63 +119,7 @@ function VisNetwork() {
         networkRef.current.on("click", handleNodeClick);
       }
 
-      // animationFrame.current = requestAnimationFrame(initNetwork);
       setLoading(false); // Set loading to false after data is fetched
-
-      function parseConnectionHistory(
-        data: ({ result: NodeData } & {
-          result: {
-            date: string;
-            time: string;
-            srcport: string;
-            dstport: string;
-          };
-        })[],
-        edges: DataSet<EdgeData>
-      ) {
-        const connectionHistory: ConnectionHistory = {};
-        for (const entry of data) {
-          const { srcip, dstip, date, time, service, proto, srcport, dstport } =
-            entry.result;
-          if (!connectionHistory[srcip]) connectionHistory[srcip] = [];
-          if (!connectionHistory[dstip]) connectionHistory[dstip] = [];
-
-          let traffic = 0;
-          const filteredEdges = edges.get({
-            filter: (edge) => edge.from === srcip && edge.to === dstip,
-          });
-          if (filteredEdges?.length) {
-            traffic = filteredEdges[0].value;
-          }
-
-          const commonData = {
-            time: `${date} ${time}`,
-            service,
-            protocol: proto,
-            srcPort: srcport,
-            dstPort: dstport,
-            traffic,
-          };
-          connectionHistory[srcip].push({
-            ...commonData,
-            direction: "outgoing",
-            otherIP: dstip,
-          });
-          connectionHistory[dstip].push({
-            ...commonData,
-            direction: "incoming",
-            otherIP: srcip,
-          });
-
-          for (const ip of Object.keys(connectionHistory)) {
-            connectionHistory[ip].sort(
-              (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
-            );
-          }
-        }
-
-        return connectionHistory;
-      }
     };
 
     fetchData();

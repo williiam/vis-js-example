@@ -3,8 +3,8 @@ export interface ConnectionEntry {
   direction: "outgoing" | "incoming";
   otherIP: string;
   service: string;
-  srcPort: string;
-  dstPort: string;
+  srcport: string;
+  dstport: string;
   traffic: number;
 }
 

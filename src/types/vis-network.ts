@@ -16,6 +16,10 @@ export interface NodeData {
   sessionid: string;
   service: string;
   proto: string;
+  srcport: string;
+  dstport: string;
+  date: string;
+  time: string;
 }
 
 export interface NewtWorkLog {

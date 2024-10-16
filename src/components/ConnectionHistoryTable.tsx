@@ -39,8 +39,8 @@ const ConnectionHistoryTable: React.FC<ConnectionHistoryTableProps> = ({
               <td>{entry.otherIP}</td>
               <td>{entry.traffic}</td>
               <td>{entry.service}</td>
-              <td>{entry.srcPort}</td>
-              <td>{entry.dstPort}</td>
+              <td>{entry.srcport}</td>
+              <td>{entry.dstport}</td>
             </tr>
           ))}
         </tbody>

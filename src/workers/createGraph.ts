@@ -1,4 +1,12 @@
-import type { EdgeMap, NewtWorkLog, NodeData } from "../types/vis-network";
+import type {
+  EdgeMap,
+  NewtWorkLog,
+  NodeData,
+  EdgeData,
+} from "../types/vis-network";
+import type { ConnectionHistory } from "../types/ip-connection";
+
+import { DataSet } from "vis-data/peer/esm/vis-data";
 
 self.onmessage = (event) => {
   const data: NewtWorkLog[] = event.data;
@@ -47,7 +55,9 @@ self.onmessage = (event) => {
     };
   });
 
-  self.postMessage({ nodes: nodeData, edges });
+  const connectionHistory = parseConnectionHistory(data, edges);
+
+  self.postMessage({ nodes: nodeData, edges, connectionHistory });
 };
 
 function getEdgeColor(service: string) {
@@ -59,4 +69,49 @@ function getEdgeColor(service: string) {
     default:
       return "#2196F3"; // Blue for other services
   }
+}
+
+function parseConnectionHistory(
+  data: NewtWorkLog[],
+  edges: EdgeData[]
+) {
+  const connectionHistory: ConnectionHistory = {};
+  for (const entry of data) {
+    const { srcip, dstip, date, time, service, proto, srcport, dstport } =
+      entry.result;
+    if (!connectionHistory[srcip]) connectionHistory[srcip] = [];
+    if (!connectionHistory[dstip]) connectionHistory[dstip] = [];
+    let traffic = 0;
+    const edgesDataSet = new DataSet(edges);
+    const filteredEdges = edgesDataSet.get({
+      filter: (edge) => edge.from === srcip && edge.to === dstip,
+    });
+    if (filteredEdges?.length) {
+      traffic = filteredEdges[0].value;
+    }
+    const commonData = {
+      time: `${date} ${time}`,
+      service,
+      protocol: proto,
+      srcport,
+      dstport,
+      traffic,
+    };
+    connectionHistory[srcip].push({
+      ...commonData,
+      direction: "outgoing",
+      otherIP: dstip,
+    });
+    connectionHistory[dstip].push({
+      ...commonData,
+      direction: "incoming",
+      otherIP: srcip,
+    });
+    for (const ip of Object.keys(connectionHistory)) {
+      connectionHistory[ip].sort(
+        (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+      );
+    }
+  }
+  return connectionHistory;
 }
