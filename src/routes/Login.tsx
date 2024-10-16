@@ -13,11 +13,6 @@ function Login() {
           <input type="password" placeholder="Password" id="password" />
         </label>
 
-        <label htmlFor="passcode">
-          PassCode
-          <input type="password" placeholder="PassCode" id="passcode" />
-        </label>
-
         <button type="submit" className="login-btn">
           Login
         </button>
