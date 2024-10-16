@@ -42,7 +42,7 @@ function Login() {
     validate("username", username, "required");
     validate("password", password, "required");
 
-    if (!isTouched.username && !isTouched.password) {
+    if (!isTouched.username || !isTouched.password) {
       return;
     }
 
