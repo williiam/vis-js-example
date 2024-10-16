@@ -1,8 +1,10 @@
-import axios from "axios";
+   // src/api/index.ts
+   import axios from 'axios';
+   import qs from 'qs';
 
-const splunkHost = import.meta.env.VITE_SPLUNK_HOST;
-const splunkPort = import.meta.env.VITE_SPLUNK_PORT;
-
-export const splunkApi = axios.create({
-  baseURL: `https://${splunkHost}:${splunkPort}`,
-});
+   export const splunkApi = axios.create({
+     baseURL: '/api', // Use the proxy path
+     headers: {
+       'Content-Type': 'application/x-www-form-urlencoded',
+     },
+   });
