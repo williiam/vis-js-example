@@ -10,6 +10,11 @@ function Login() {
     username: false,
     password: false,
   });
+  const [isTouched, setIsTouched] = useState({
+    username: false,
+    password: false,
+  });
+
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
@@ -37,6 +42,10 @@ function Login() {
     validate("username", username, "required");
     validate("password", password, "required");
 
+    if (!isTouched.username && !isTouched.password) {
+      return;
+    }
+
     if (error.username || error.password) {
       return;
     }
@@ -61,13 +70,12 @@ function Login() {
               setDataToPost({ ...dataToPost, username: e.target.value })
             }
             ref={usernameRef}
-            onBlur={() =>
-              validate("username", usernameRef.current?.value, "required")
-            }
+            onBlur={() => {
+              validate("username", usernameRef.current?.value, "required");
+              setIsTouched({ ...isTouched, username: true });
+            }}
           />
-          {error.username && (
-            <p className="error-message">Username is required</p>
-          )}
+          <p className={`error-message ${error.username && isTouched.username ? "visible" : ""}`}>Username is required</p>
         </label>
 
         <label htmlFor="password">
@@ -81,13 +89,12 @@ function Login() {
               setDataToPost({ ...dataToPost, password: e.target.value })
             }
             ref={passwordRef}
-            onBlur={() =>
-              validate("password", passwordRef.current?.value, "required")
-            }
+            onBlur={() => {
+              validate("password", passwordRef.current?.value, "required");
+              setIsTouched({ ...isTouched, password: true });
+            }}
           />
-          {error.password && (
-            <p className="error-message">Password is required</p>
-          )}
+          <p className={`error-message ${error.password && isTouched.password ? "visible" : ""}`}>Password is required</p>
         </label>
 
         <button type="submit" className="login-btn">
